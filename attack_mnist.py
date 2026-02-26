@@ -9,6 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Target Model
 class SimpleCNN(nn.Module):
+    """Basic Neural Network."""
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
@@ -32,6 +33,7 @@ class SimpleCNN(nn.Module):
 
 # Training
 def train(model, loader, device, epochs=5):
+    """Standard training: updates weights to minimize loss on clean data"""
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
 
@@ -54,6 +56,7 @@ def train(model, loader, device, epochs=5):
 
 # Accuracy Evaluation
 def test_accuracy(model, loader, device):
+    """Measures performance on original, non-attacked data."""
     model.eval()
     correct = 0
     total = 0
@@ -136,6 +139,7 @@ def mifgsm(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
 
 # Evaluate Attack
 def evaluate_attack(model, loader, device, attack_fn, **kwargs):
+    """Measures Post-Attack Accuracy and Attack Success Rate (ASR)"""
     model.eval()
     correct = 0
     total = 0
