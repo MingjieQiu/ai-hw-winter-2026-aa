@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# Model
+# Target Model
 class SimpleCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -31,7 +31,6 @@ class SimpleCNN(nn.Module):
 
 
 # Training
-
 def train(model, loader, device, epochs=5):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
@@ -53,7 +52,7 @@ def train(model, loader, device, epochs=5):
         print(f"Epoch {epoch + 1}: Loss = {total_loss:.4f}")
 
 
-# Clean Accuracy
+# Accuracy Evaluation
 def test_accuracy(model, loader, device):
     model.eval()
     correct = 0
@@ -74,7 +73,8 @@ def test_accuracy(model, loader, device):
 
 
 # Attacks
-def fgsm_attack(model, images, labels, epsilon):
+# 1. FGSM (Fast Gradient Sign Method)
+def fgsm(model, images, labels, epsilon):
     images = images.clone().detach().requires_grad_(True)
     outputs = model(images)
     loss = nn.CrossEntropyLoss()(outputs, labels)
@@ -88,7 +88,8 @@ def fgsm_attack(model, images, labels, epsilon):
     return adv_images.detach()
 
 
-def pgd_attack(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
+# 2. PGD (Projected Gradient Descent)
+def pgd(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
     original = images.clone().detach()
     images = original.clone()
 
@@ -107,7 +108,8 @@ def pgd_attack(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
     return images
 
 
-def mifgsm_attack(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
+# 3. MI-FGSM (Momentum Iterative FGSM)
+def mifgsm(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
     original = images.clone().detach()
     images = original.clone()
     momentum = torch.zeros_like(images)
@@ -156,8 +158,7 @@ def evaluate_attack(model, loader, device, attack_fn, **kwargs):
 
 
 if __name__ == "__main__":
-
-    # Data
+    # Prepare MNIST Data
     transform = transforms.ToTensor()
     train_dataset = torchvision.datasets.MNIST(root="./data", train=True, download=True, transform=transform)
     test_dataset = torchvision.datasets.MNIST(root="./data", train=False, download=True, transform=transform)
@@ -169,19 +170,18 @@ if __name__ == "__main__":
     model = SimpleCNN().to(device)
 
     # Train
+    print("Starting Training...")
     train(model, train_loader, device, epochs=5)
 
     # Clean accuracy
     test_accuracy(model, test_loader, device)
 
     # Attacks
-    print("\nFGSM Attack")
-    evaluate_attack(model, test_loader, device, fgsm_attack, epsilon=0.2)
+    print("\n--- Running FGSM Attack ---")
+    evaluate_attack(model, test_loader, device, fgsm, epsilon=0.2)
 
-    print("\nPGD Attack")
-    evaluate_attack(model, test_loader, device, pgd_attack,
-                    epsilon=0.3, alpha=0.01, iters=40)
+    print("\n--- Running PGD Attack ---")
+    evaluate_attack(model, test_loader, device, pgd, epsilon=0.3, alpha=0.01, iters=40)
 
     print("\nMomentum I-FGSM Attack")
-    evaluate_attack(model, test_loader, device, mifgsm_attack,
-                    epsilon=0.3, alpha=0.01, iters=40)
+    evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.3, alpha=0.01, iters=40)
