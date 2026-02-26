@@ -10,6 +10,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Target Model
 class SimpleCNN(nn.Module):
     """Basic Neural Network."""
+
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
@@ -33,7 +34,14 @@ class SimpleCNN(nn.Module):
 
 # Training
 def train(model, loader, device, epochs=5):
-    """Standard training: updates weights to minimize loss on clean data"""
+    """
+    Standard training: updates weights to minimize loss on clean data
+    Args:
+        model: PyTorch model to train
+        loader: Training data loader
+        epochs: Number of training epochs
+        device: Device to train on
+    """
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
 
@@ -56,7 +64,15 @@ def train(model, loader, device, epochs=5):
 
 # Accuracy Evaluation
 def test_accuracy(model, loader, device):
-    """Measures performance on original, non-attacked data."""
+    """
+    Measures performance on original, non-attacked data.
+    Args:
+        model: Trained model
+        loader: Data loader to evaluate
+        device: Device to evaluate on
+    Returns:
+        float: Accuracy in [0,1]
+    """
     model.eval()
     correct = 0
     total = 0
@@ -76,8 +92,17 @@ def test_accuracy(model, loader, device):
 
 
 # Attacks
-# 1. FGSM (Fast Gradient Sign Method)
 def fgsm(model, images, labels, epsilon):
+    """
+    Fast Gradient Sign Method attack.
+    Args:
+        model: Model to attack
+        images: Original images, shape [B,1,28,28]
+        labels: True labels, shape [B]
+        epsilon: Attack strength
+    Returns:
+        torch.Tensor: Adversarial images
+    """
     images = images.clone().detach().requires_grad_(True)
     outputs = model(images)
     loss = nn.CrossEntropyLoss()(outputs, labels)
@@ -91,8 +116,19 @@ def fgsm(model, images, labels, epsilon):
     return adv_images.detach()
 
 
-# 2. PGD (Projected Gradient Descent)
 def pgd(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
+    """
+    Iterative PGD / I-FGSM attack.
+    Args:
+        model: Model to attack
+        images: Original images
+        labels: True labels
+        epsilon: Maximum perturbation
+        alpha: Step size
+        iters: Number of iterations
+    Returns:
+        torch.Tensor: Adversarial images
+    """
     original = images.clone().detach()
     images = original.clone()
 
@@ -111,8 +147,21 @@ def pgd(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
     return images
 
 
-# 3. MI-FGSM (Momentum Iterative FGSM)
+
 def mifgsm(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
+    """
+    Momentum I-FGSM attack.
+    Args:
+        model Model to attack
+        images: Original images
+        labels: True labels
+        epsilon: Maximum perturbation
+        alpha: Step size
+        iters: Number of iterations
+        mu Momentum factor
+    Returns:
+        torch.Tensor: Adversarial images
+    """
     original = images.clone().detach()
     images = original.clone()
     momentum = torch.zeros_like(images)
@@ -139,7 +188,16 @@ def mifgsm(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
 
 # Evaluate Attack
 def evaluate_attack(model, loader, device, attack_fn, **kwargs):
-    """Measures Post-Attack Accuracy and Attack Success Rate (ASR)"""
+    """
+    Measures Post-Attack Accuracy and Attack Success Rate (ASR)
+    Args:
+        model: Trained model
+        loader: Test data loader
+        attack_fn: Attack function, e.g. fgsm, pgd, mifgsm
+        kwargs: Arguments for attack function (epsilon, alpha, iters, mu)
+    Returns:
+        tuple: (Post-attack accuracy, ASR)
+    """
     model.eval()
     correct = 0
     total = 0
