@@ -187,5 +187,5 @@ if __name__ == "__main__":
     print("\n--- Running PGD Attack ---")
     evaluate_attack(model, test_loader, device, pgd, epsilon=0.3, alpha=0.01, iters=40)
 
-    print("\nMomentum I-FGSM Attack")
+    print("\n--- Running Momentum I-FGSM Attack ---")
     evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.3, alpha=0.01, iters=40)
