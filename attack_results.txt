@@ -1,0 +1,24 @@
+Adversarial Attack Evaluation Results
+=====================================
+
+--- Training Results ---
+Epoch 1: Loss = 164.9604
+Epoch 2: Loss = 46.5351
+Epoch 3: Loss = 32.9108
+Epoch 4: Loss = 24.0477
+Epoch 5: Loss = 18.4821
+
+Clean Accuracy: 98.95%
+
+--- FGSM Attack (epsilon=0.2) ---
+Post-Attack Accuracy: 40.45%
+Attack Success Rate (ASR): 59.55%
+
+--- PGD Attack (epsilon=0.3, alpha=0.01, iters=40) ---
+Post-Attack Accuracy: 0.00%
+Attack Success Rate (ASR): 100.00%
+
+--- Momentum I-FGSM Attack (epsilon=0.3, alpha=0.01, iters=40) ---
+Post-Attack Accuracy: 0.04%
+Attack Success Rate (ASR): 99.96%
+

@@ -41,10 +41,12 @@ def train(model, loader, device, epochs=5):
         loader: Training data loader
         epochs: Number of training epochs
         device: Device to train on
+    Returns: epoch_losses
     """
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
 
+    epoch_losses = []
     model.train()
     for epoch in range(epochs):
         total_loss = 0
@@ -60,6 +62,9 @@ def train(model, loader, device, epochs=5):
             total_loss += loss.item()
 
         print(f"Epoch {epoch + 1}: Loss = {total_loss:.4f}")
+        epoch_losses.append(total_loss)
+
+    return epoch_losses
 
 
 # Accuracy Evaluation
@@ -147,7 +152,6 @@ def pgd(model, images, labels, epsilon=0.3, alpha=0.01, iters=40):
     return images
 
 
-
 def mifgsm(model, images, labels, epsilon=0.3, alpha=0.01, iters=40, mu=1.0):
     """
     Momentum I-FGSM attack.
@@ -218,6 +222,8 @@ def evaluate_attack(model, loader, device, attack_fn, **kwargs):
     print(f"Post-Attack Accuracy: {acc * 100:.2f}%")
     print(f"Attack Success Rate (ASR): {asr * 100:.2f}%")
 
+    return acc, asr
+
 
 if __name__ == "__main__":
     # Prepare MNIST Data
@@ -233,17 +239,41 @@ if __name__ == "__main__":
 
     # Train
     print("Starting Training...")
-    train(model, train_loader, device, epochs=5)
+    training_losses = train(model, train_loader, device, epochs=5)
 
-    # Clean accuracy
-    test_accuracy(model, test_loader, device)
+    # Open a file to save the results
+    result_filename = "attack_results.txt"
+    with open(result_filename, "w") as f:
+        f.write("Adversarial Attack Evaluation Results\n")
+        f.write("=====================================\n\n")
 
-    # Attacks
-    print("\n--- Running FGSM Attack ---")
-    evaluate_attack(model, test_loader, device, fgsm, epsilon=0.2)
+        # Write Training Results
+        f.write("--- Training Results ---\n")
+        for epoch, loss in enumerate(training_losses):
+            f.write(f"Epoch {epoch + 1}: Loss = {loss:.4f}\n")
+        f.write("\n")
 
-    print("\n--- Running PGD Attack ---")
-    evaluate_attack(model, test_loader, device, pgd, epsilon=0.3, alpha=0.01, iters=40)
+        # Clean accuracy
+        clean_acc = test_accuracy(model, test_loader, device)
+        f.write(f"Clean Accuracy: {clean_acc * 100:.2f}%\n\n")
 
-    print("\n--- Running Momentum I-FGSM Attack ---")
-    evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.3, alpha=0.01, iters=40)
+        # Attacks
+        print("\n--- Running FGSM Attack ---")
+        fgsm_acc, fgsm_asr = evaluate_attack(model, test_loader, device, fgsm, epsilon=0.2)
+        f.write("--- FGSM Attack (epsilon=0.2) ---\n")
+        f.write(f"Post-Attack Accuracy: {fgsm_acc * 100:.2f}%\n")
+        f.write(f"Attack Success Rate (ASR): {fgsm_asr * 100:.2f}%\n\n")
+
+        print("\n--- Running PGD Attack ---")
+        pgd_acc, pgd_asr = evaluate_attack(model, test_loader, device, pgd, epsilon=0.3, alpha=0.01, iters=40)
+        f.write("--- PGD Attack (epsilon=0.3, alpha=0.01, iters=40) ---\n")
+        f.write(f"Post-Attack Accuracy: {pgd_acc * 100:.2f}%\n")
+        f.write(f"Attack Success Rate (ASR): {pgd_asr * 100:.2f}%\n\n")
+
+        print("\n--- Running Momentum I-FGSM Attack ---")
+        mi_acc, mi_asr = evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.3, alpha=0.01, iters=40)
+        f.write("--- Momentum I-FGSM Attack (epsilon=0.3, alpha=0.01, iters=40) ---\n")
+        f.write(f"Post-Attack Accuracy: {mi_acc * 100:.2f}%\n")
+        f.write(f"Attack Success Rate (ASR): {mi_asr * 100:.2f}%\n\n")
+
+    print(f"\nAll results have been successfully saved to {result_filename}")
