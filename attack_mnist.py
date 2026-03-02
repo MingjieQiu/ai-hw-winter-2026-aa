@@ -265,14 +265,14 @@ if __name__ == "__main__":
         f.write(f"Attack Success Rate (ASR): {fgsm_asr * 100:.2f}%\n\n")
 
         print("\n--- Running PGD Attack ---")
-        pgd_acc, pgd_asr = evaluate_attack(model, test_loader, device, pgd, epsilon=0.3, alpha=0.01, iters=40)
-        f.write("--- PGD Attack (epsilon=0.3, alpha=0.01, iters=40) ---\n")
+        pgd_acc, pgd_asr = evaluate_attack(model, test_loader, device, pgd, epsilon=0.2, alpha=0.01, iters=40)
+        f.write("--- PGD Attack (epsilon=0.2, alpha=0.01, iters=40) ---\n")
         f.write(f"Post-Attack Accuracy: {pgd_acc * 100:.2f}%\n")
         f.write(f"Attack Success Rate (ASR): {pgd_asr * 100:.2f}%\n\n")
 
         print("\n--- Running Momentum I-FGSM Attack ---")
-        mi_acc, mi_asr = evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.3, alpha=0.01, iters=40)
-        f.write("--- Momentum I-FGSM Attack (epsilon=0.3, alpha=0.01, iters=40) ---\n")
+        mi_acc, mi_asr = evaluate_attack(model, test_loader, device, mifgsm, epsilon=0.2, alpha=0.01, iters=40)
+        f.write("--- Momentum I-FGSM Attack (epsilon=0.2, alpha=0.01, iters=40) ---\n")
         f.write(f"Post-Attack Accuracy: {mi_acc * 100:.2f}%\n")
         f.write(f"Attack Success Rate (ASR): {mi_asr * 100:.2f}%\n\n")
 
